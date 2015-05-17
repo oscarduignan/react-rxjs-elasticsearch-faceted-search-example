@@ -1,0 +1,10 @@
+{
+  "name": "elastic-react-rxjs",
+  "private": true,
+  "main": "dist/index.html",
+  "ignore": [],
+  "devDependencies": {
+    "modernizr": "~2.8.3",
+    "respond": "~1.4.2"
+  }
+}
