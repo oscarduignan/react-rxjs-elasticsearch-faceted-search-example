@@ -43,7 +43,7 @@ export var searches = Rx.Observable.
         }
     ).
     debounce(500).
-    do(search => console.log(search)).
+    do(search => console.log("Search: ", search)).
     share();
 
 export var results = searches.

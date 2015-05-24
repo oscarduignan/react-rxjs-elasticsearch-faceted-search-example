@@ -4,10 +4,13 @@ export var SearchResults = React.createClass({
     render() {
         var { results } = this.props;
 
-        return (
-            <ul>
-                {results && results.hits.hits.map(hit => <li>{hit._source.title}</li>)}
-            </ul>
-        );
+        return results ? (
+            <div>
+                <p>Total: {results.hits.total}</p>
+                <ul>
+                    {results.hits.hits.map(hit => <li>{hit._source.title}</li>)}
+                </ul>
+            </div>
+        ) : false;
     }
 });
