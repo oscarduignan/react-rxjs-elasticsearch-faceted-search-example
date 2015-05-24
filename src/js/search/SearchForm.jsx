@@ -16,6 +16,9 @@ export var SearchForm = React.createClass({
                 pluck('target', 'value').
                 distinctUntilChanged().
                 subscribe(query)
+            // if i want to be able to clear the query by clearing
+            // the state of the behavioursubject then need to setState
+            // when it changes here, but for now I don't need that
         ];
     },
 

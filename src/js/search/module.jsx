@@ -28,7 +28,7 @@ export default React.createClass({
 
         return (
             <div>
-                <h1>Elastic React RxJS Faceted Seatestrch</h1>
+                <h1>Elastic React RxJS Faceted Search</h1>
                 <SearchForm />
                 {searchInProgress ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p> : false}
                 <SearchFilters />
