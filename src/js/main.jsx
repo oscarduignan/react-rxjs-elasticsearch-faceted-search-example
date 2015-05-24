@@ -1,4 +1,6 @@
 import React from 'react';
-import App from './app.jsx';
+import SearchModule from './search/module';
 
-React.render(<App />, document.getElementById('app'))
+React.render(<SearchModule />, document.getElementById('app'));
+
+require('expose?observables!./search/observables');

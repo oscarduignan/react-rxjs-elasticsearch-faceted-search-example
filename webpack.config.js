@@ -48,7 +48,7 @@ module.exports = {
     )
   ],
   resolve: {
-    extensions: ["", ".js"],
+    extensions: ["", ".js", ".jsx"],
     root: [
       path.join(__dirname, 'src', 'js'),
       path.join(__dirname, 'src', 'scss'),
