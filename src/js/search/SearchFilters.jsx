@@ -1,28 +1,30 @@
 import Rx from 'rx-dom';
 import React from 'react/addons';
 import update from 'react/lib/update';
-import { selectedTags, possibleTags, selectedTypes, possibleTypes } from './observables';
+import * as observables from './observables';
 import { SubscribesToObservablesMixin } from '../utils';
 
 export var SearchFilters = React.createClass({
     mixins: [
-        React.addons.LinkedStateMixin
+        React.addons.LinkedStateMixin,
+        SubscribesToObservablesMixin
     ],
 
     getInitialState() {
         return {
-            selectedTags: ['a'],
-            possibleTags: ['a', 'b', 'c']
+            selectedTags: [],
+            possibleTags: [],
+            selectedTypes: [],
+            possibleTypes: [],
         };
     },
 
-    /*
     subscribe() {
         return [
             Rx.Observable.
                 combineLatest(
-                    possibleTags,
-                    possibleTypes,
+                    observables.possibleTags,
+                    observables.possibleTypes,
                     (possibleTags, possibleTypes) => {
                         return {
                             possibleTags: possibleTags,
@@ -33,28 +35,31 @@ export var SearchFilters = React.createClass({
                 subscribe(state => this.setState(state))
         ];
     },
-    */
 
     toggle(array) {
         var arrayRef = this.state[array];
 
         return (item, checked) => {
-            // rather use a set here
-            this.setState({
-                [array]: checked
+            // rather use an immutable-js set here
+            var selected = (
+                checked
                     ? arrayRef.indexOf(item) === -1
                         ? arrayRef.concat(item)
                         : arrayRef
                     : arrayRef.indexOf(item) > -1
                         ? update(arrayRef, {$splice: [[arrayRef.indexOf(item), 1]]})
                         : arrayRef
+            );
+
+            observables[array].onNext(selected);
+
+            this.setState({
+                [array]: selected
             });
         };
     },
 
     render() {
-        console.log(this.state);
-
         var { selectedTags, possibleTags, selectedTypes, possibleTypes } = this.state;
 
         return (
@@ -62,7 +67,14 @@ export var SearchFilters = React.createClass({
                 <fieldset>
                     <legend>Tags</legend>
                     <ul>
-                        {possibleTags ? possibleTags.map((tag) => <ListCheckbox toggle={this.toggle('selectedTags')} label={tag} checked={selectedTags.indexOf(tag) > -1} />) : false}
+                        {possibleTags ? possibleTags.map((tag) => <ListCheckbox toggle={this.toggle('selectedTags')} label={tag.key} key={tag.key} count={tag.doc_count} checked={selectedTags.indexOf(tag.key) > -1} />) : false}
+                    </ul>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Types</legend>
+                    <ul>
+                        {possibleTypes ? possibleTypes.map((type) => <ListCheckbox toggle={this.toggle('selectedTypes')} label={type.key} key={type.key} count={type.doc_count} checked={selectedTypes.indexOf(type.key) > -1} />) : false}
                     </ul>
                 </fieldset>
             </div>
@@ -76,10 +88,10 @@ var ListCheckbox = React.createClass({
     },
 
     render() {
-        var { label, checked } = this.props;
+        var { label, count, checked } = this.props;
 
         return (
-            <li><label><input type="checkbox" checked={checked} onChange={this.handleChange} /> {label}</label></li>
+            <li><label><input type="checkbox" checked={checked} onChange={this.handleChange} /> {label} ({count})</label></li>
         );
     }
 });

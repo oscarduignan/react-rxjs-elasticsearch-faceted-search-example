@@ -12,6 +12,11 @@ export var search = function(options) {
         }
     };
 
+    var filter = {};
+    if (options.filters.length) {
+        filter.and = options.filters;
+    }
+
     return client.search({
         index: 'elastic',
         type: 'muraContent',
@@ -19,11 +24,7 @@ export var search = function(options) {
             query: {
                 filtered: {
                     query: query,
-                    /*
-                    filter: {
-                        and: options.filters
-                    }
-                    */
+                    filter: filter
                 }
             },
             aggs: {
@@ -33,21 +34,23 @@ export var search = function(options) {
                         size: 10
                     }
                 },
-                /*
                 all: {
                     global: {},
                     aggs: {
-                        filter: {
-                            query: query
-                        },
-                        typeAndSubType: {
-                            terms: {
-                                field: 'typeAndSubType'
+                        query: {
+                            filter: {
+                                query: query
+                            },
+                            aggs: {
+                                typeAndSubType: {
+                                    terms: {
+                                        field: 'typeAndSubType'
+                                    }
+                                }
                             }
                         }
                     }
                 }
-                */
             }
         }
     });

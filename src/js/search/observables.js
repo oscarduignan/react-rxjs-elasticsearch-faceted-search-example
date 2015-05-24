@@ -8,18 +8,22 @@ export var selectedTypes = new Rx.BehaviorSubject([]);
 
 // results must have each tag
 var tagsTermFilters = selectedTags.
-    map(tags => tags.map(tag => {term: {tags: tag}}));
+    map(tags => tags.map(tag => {
+        return {term: {tags: tag}}
+    }));
 
 // results can have any of the types
 var typesTermsFilter = selectedTypes.
-    map(types => {terms: {typeAndSubType: types}});
+    map(types => {
+        return types.length ? {terms: {typeAndSubType: types}} : [];
+    });
 
 var filters = Rx.Observable.
     combineLatest(
         typesTermsFilter,
         tagsTermFilters,
         (typesTermsFilter, tagsTermFilters) => {
-            return [typesTermsFilter, ...tagsTermFilters];
+            return tagsTermFilters.concat(typesTermsFilter);
         }
     );
 
@@ -35,6 +39,7 @@ export var searches = Rx.Observable.
         }
     ).
     debounce(500).
+    do(search => console.log(search)).
     share();
 
 export var results = searches.
@@ -45,7 +50,7 @@ export var possibleTags = results.
     pluck('aggregations', 'tags', 'buckets');
 
 export var possibleTypes = results.
-    pluck('aggregations', 'types', 'buckets');
+    pluck('aggregations', 'all', 'query', 'typeAndSubType', 'buckets');
 
 export var searchInProgress = new Rx.BehaviorSubject(false);
 query.map(() => true).subscribe(searchInProgress);
