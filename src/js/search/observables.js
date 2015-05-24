@@ -6,6 +6,10 @@ export var query = new Rx.BehaviorSubject("");
 export var selectedTags = new Rx.BehaviorSubject([]);
 export var selectedTypes = new Rx.BehaviorSubject([]);
 
+// clear selected tags and types on new query
+query.map(() => []).subscribe(selectedTags);
+query.map(() => []).subscribe(selectedTypes);
+
 // results must have each tag
 var tagsTermFilters = selectedTags.
     map(tags => tags.map(tag => {

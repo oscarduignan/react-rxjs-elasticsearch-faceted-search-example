@@ -17,6 +17,8 @@ export var search = function(options) {
         filter.and = options.filters;
     }
 
+    var tagFilters = options.filters.filter(filter => (filter.term || filter.terms || {}).tags);
+
     return client.search({
         index: 'elastic',
         type: 'muraContent',
@@ -39,7 +41,9 @@ export var search = function(options) {
                     aggs: {
                         query: {
                             filter: {
-                                query: query
+                                and: [
+                                    { query: query }
+                                ].concat(tagFilters)
                             },
                             aggs: {
                                 typeAndSubType: {

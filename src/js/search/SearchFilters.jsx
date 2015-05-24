@@ -23,11 +23,15 @@ export var SearchFilters = React.createClass({
         return [
             Rx.Observable.
                 combineLatest(
+                    observables.selectedTags,
                     observables.possibleTags,
+                    observables.selectedTypes,
                     observables.possibleTypes,
-                    (possibleTags, possibleTypes) => {
+                    (selectedTags, possibleTags, selectedTypes, possibleTypes) => {
                         return {
+                            selectedTags: selectedTags,
                             possibleTags: possibleTags,
+                            selectedTypes: selectedTypes,
                             possibleTypes: possibleTypes,
                         }
                     }
