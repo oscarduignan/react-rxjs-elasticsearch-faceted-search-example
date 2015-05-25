@@ -80,15 +80,19 @@ export default React.createClass({
                 <h1>Elastic React RxJS Faceted Search</h1>
                 <SearchForm query={query} onChange={this.updateQuery} />
                 {searchInProgress ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p> : false}
-                <fieldset>
-                    <legend>Tags</legend>
-                    <SearchFilterList selected={selectedTags} possible={possibleTags} onChange={this.toggleFilter("selectedTags")} />
-                </fieldset>
-                <fieldset>
-                    <legend>Types</legend>
-                    <SearchFilterList selected={selectedTypes} possible={possibleTypes} onChange={this.toggleFilter("selectedTypes")} />
-                </fieldset>
-                <SearchResults results={results} />
+                <div className="row">
+                    <div className="well col-sm-3">
+                        <fieldset>
+                            <legend>Tags</legend>
+                            <SearchFilterList selected={selectedTags} possible={possibleTags} onChange={this.toggleFilter("selectedTags")} />
+                        </fieldset>
+                        <fieldset>
+                            <legend>Types</legend>
+                            <SearchFilterList selected={selectedTypes} possible={possibleTypes} onChange={this.toggleFilter("selectedTypes")} />
+                        </fieldset>
+                    </div>
+                    <SearchResults results={results} className="col-sm-9" />
+                </div>
             </div>
         );
     }

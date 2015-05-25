@@ -2,10 +2,10 @@ import React from 'react';
 
 export var SearchResults = React.createClass({
     render() {
-        var { results } = this.props;
+        var { results, ...props } = this.props;
 
         return results ? (
-            <div>
+            <div {...props}>
                 <p>Total: {results.hits.total}</p>
                 <ul>
                     {results.hits.hits.map(hit => <li>{hit._source.title}</li>)}

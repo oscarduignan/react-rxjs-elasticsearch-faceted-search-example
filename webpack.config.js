@@ -17,8 +17,8 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/,     loader: "babel", exclude: /node_modules|bower_components/},
-      { test: /\.jsx$/,    loader: "react-hot!babel", exclude: /node_modules|bower_components/},
+      { test: /\.js$/,     loader: "babel?optional[]=runtime&stage=1", exclude: /node_modules|bower_components/},
+      { test: /\.jsx$/,    loader: "react-hot!babel?optional[]=runtime&stage=1", exclude: /node_modules|bower_components/},
       { test: /\.s?css$/,  loader: ExtractTextPlugin.extract("style", "css!autoprefixer?browsers=last 2 version!sass?includePaths[]=" + path.join(__dirname, "node_modules"))},
       { test: /\.woff2?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
       { test: /\.ttf$/,    loader: "file-loader" },
@@ -35,8 +35,9 @@ module.exports = {
   plugins: [
     new ExtractTextPlugin("[name].css"),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.PrefetchPlugin("react"),
-    new webpack.PrefetchPlugin("rx-dom"),
+    //new webpack.optimize.UglifyJsPlugin(),
+    //new webpack.optimize.OccurenceOrderPlugin(),
+    //new webpack.optimize.DedupePlugin(),
     new webpack.NoErrorsPlugin(),
     new webpack.ProvidePlugin({
       $: "jquery",

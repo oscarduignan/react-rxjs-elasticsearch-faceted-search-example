@@ -4,6 +4,8 @@ var client = new elasticsearch.Client({
     host: 'localhost:9200'
 });
 
+// TODO replace elasticsearch client with something else, it's like 400kb minified and I'm not using any of it!
+
 export var search = function(options) {
     var query = {
         query_string: {
