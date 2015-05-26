@@ -1,56 +1,26 @@
-import Rx from 'rx-dom';
-import React from 'react/addons';
+import React from 'react';
+import update from 'react/lib/update';
 import * as observables from './observables';
 import { SearchForm } from './SearchForm';
-import { SearchFilterList } from './SearchFilterList';
+import { FilterList } from './FilterList';
 import { SearchResults } from './SearchResults';
+import { Pagination } from './Pagination';
 
 var StateStreamMixin = require('rx-react').StateStreamMixin;
 
 export default React.createClass({
     mixins: [StateStreamMixin],
 
-    getInitialState() {
-        return {
-            selectedTags: [],
-            possibleTags: [],
-            selectedTypes: [],
-            possibleTypes: [],
-        };
-    },
-
     getStateStream() {
-        return Rx.Observable.combineLatest(
-            observables.query,
-            observables.results,
-            observables.selectedTags,
-            observables.possibleTags,
-            observables.selectedTypes,
-            observables.possibleTypes,
-            observables.searchInProgress,
-            (   query,
-                results,
-                selectedTags,
-                possibleTags,
-                selectedTypes,
-                possibleTypes,
-                searchInProgress
-            ) => {
-                return {
-                    query: query,
-                    selectedTags: selectedTags,
-                    possibleTags: possibleTags,
-                    selectedTypes: selectedTypes,
-                    possibleTypes: possibleTypes,
-                    results: results,
-                    searchInProgress: searchInProgress,
-                }
-            }
-        );
+        return observables.moduleState;
     },
 
     updateQuery(event) {
         observables.query.onNext(event.target.value);
+    },
+
+    changePage(page) {
+        observables.resultsFrom.onNext((page-1) * this.state.resultsPerPage);
     },
 
     toggleFilter(array) {
@@ -59,39 +29,56 @@ export default React.createClass({
         return (event) => {
             var value = event.target.value;
 
-            // rather use an immutable-js set here I think
+            // rather use an immutable-js set here
             observables[array].onNext(
                 !!event.target.checked
                     ? current.indexOf(value) === -1
                         ? current.concat(value)
                         : current
                     : current.indexOf(value) > -1
-                        ? React.addons.update(current, {$splice: [[current.indexOf(value), 1]]})
+                        ? update(current, {$splice: [[current.indexOf(value), 1]]})
                         : current
             );
         };
     },
 
     render(){
-        var { query, selectedTags, possibleTags, selectedTypes, possibleTypes, results, searchInProgress } = this.state || {};
+        var { query, totalPages, currentPage, selectedTags, possibleTags, selectedTypes, possibleTypes, results, searchInProgress } = this.state || {};
 
         return (
             <div>
-                <h1>Elastic React RxJS Faceted Search</h1>
-                <SearchForm query={query} onChange={this.updateQuery} />
-                {searchInProgress ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p> : false}
                 <div className="row">
-                    <div className="well col-sm-3">
-                        <fieldset>
-                            <legend>Tags</legend>
-                            <SearchFilterList selected={selectedTags} possible={possibleTags} onChange={this.toggleFilter("selectedTags")} />
-                        </fieldset>
-                        <fieldset>
-                            <legend>Types</legend>
-                            <SearchFilterList selected={selectedTypes} possible={possibleTypes} onChange={this.toggleFilter("selectedTypes")} />
-                        </fieldset>
+                    <div className="col-sm-9 col-sm-push-3">
+                        <h1>Elastic React RxJS Faceted Search</h1>
+                        <SearchForm query={query} onChange={this.updateQuery} />
                     </div>
-                    <SearchResults results={results} className="col-sm-9" />
+                </div>
+                <div className="row">
+                    {results
+                        ? ( <div className="well col-sm-3">
+                                <fieldset>
+                                    <legend>Tags</legend>
+                                    <FilterList selected={selectedTags} possible={possibleTags} onChange={this.toggleFilter("selectedTags")} />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Types</legend>
+                                    <FilterList selected={selectedTypes} possible={possibleTypes} onChange={this.toggleFilter("selectedTypes")} />
+                                </fieldset>
+                            </div>
+                        ) : false}
+                    <div className="col-sm-9 pull-right">
+                        {searchInProgress
+                            ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p>
+                            : (
+                                <div>
+                                    <SearchResults results={results} />
+
+                                    {results
+                                        ? <Pagination totalPages={totalPages} currentPage={currentPage} changePage={this.changePage} />
+                                        : false}
+                                </div>
+                            )}
+                    </div>
                 </div>
             </div>
         );

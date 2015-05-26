@@ -7,10 +7,26 @@ export var SearchResults = React.createClass({
         return results ? (
             <div {...props}>
                 <p>Total: {results.hits.total}</p>
-                <ul>
-                    {results.hits.hits.map(hit => <li>{hit._source.title}</li>)}
-                </ul>
+
+                {results.hits.hits.map(hit => <SearchResult hit={hit} />)}
             </div>
-        ) : false;
+        ) : (
+            <div {...props}>
+                <p>No results found</p>
+            </div>
+        );
+    }
+});
+
+var SearchResult = React.createClass({
+    render() {
+        var { title, url } = this.props.hit._source;
+
+        return (
+            <div>
+                <h3><a href={url}>{title}</a></h3>
+                <p>Score: {this.props.hit._score}</p>
+            </div>
+        );
     }
 });

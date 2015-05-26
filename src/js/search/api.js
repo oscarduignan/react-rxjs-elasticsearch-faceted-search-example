@@ -24,6 +24,8 @@ export var search = function(options) {
     return client.search({
         index: 'elastic',
         type: 'muraContent',
+        from: options.from || 0,
+        size: options.size || 5,
         body: {
             query: {
                 filtered: {
