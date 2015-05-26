@@ -1,3 +1,4 @@
+import Rx from 'rx';
 import React from 'react';
 import SearchModule from './search/module';
 import * as observables from './search/observables';
@@ -20,11 +21,20 @@ import URI from 'URIjs';
 
 */
 
-var queryParams = URI().search(true);
-if (queryParams.q)     { observables.query.onNext(queryParams.q); }
-if (queryParams.page)  { observables.changePage(queryParams.page); }
-if (queryParams.tags)  { observables.selectedTags.onNext(queryParams.tags); }
-if (queryParams.types) { observables.selectedTypes.onNext(queryParams.types); }
+var addNextSearchToHistory = new Rx.BehaviorSubject(true);
+
+function loadStateFromURL() {
+    addNextSearchToHistory.onNext(false);
+    var queryParams = URI().search(true);
+    if (queryParams.q)     { observables.query.onNext(queryParams.q); }
+    if (queryParams.page)  { observables.changePage(queryParams.page); }
+    if (queryParams.tags)  { observables.selectedTags.onNext(queryParams.tags); }
+    if (queryParams.types) { observables.selectedTypes.onNext(queryParams.types); }
+}
+
+loadStateFromURL();
+
+window.addEventListener("popstate", loadStateFromURL);
 
 React.render(<SearchModule />, document.getElementById('app'));
 
@@ -39,4 +49,9 @@ utils.
     map(params => URI().setSearch(params).toString()).
     distinctUntilChanged().
     debounce(200).
-    subscribe(nextURL => window.history.pushState(null, null, nextURL));
+    subscribe(nextURL => {
+        // TODO what's the most idiomatic way to do this?
+        if (addNextSearchToHistory.value)
+            window.history.pushState(null, null, nextURL)
+        addNextSearchToHistory.onNext(true);
+    });
