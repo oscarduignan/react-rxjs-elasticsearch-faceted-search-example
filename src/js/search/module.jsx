@@ -20,11 +20,11 @@ export default React.createClass({
     },
 
     changePage(page) {
-        observables.resultsFrom.onNext((page-1) * this.state.resultsPerPage);
+        observables.resultsFrom.onNext((page-1) * observables.resultsPerPage.value);
     },
 
     toggleFilter(array) {
-        var current = this.state[array];
+        var current = observables[array].value; // better to get it from this.state?
 
         return (event) => {
             var value = event.target.value;

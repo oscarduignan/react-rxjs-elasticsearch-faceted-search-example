@@ -5,7 +5,7 @@ export var FilterList = React.createClass({
         var { selected, possible, onChange } = this.props;
 
         return (
-            <ul>
+            <ul className="list-unstyled">
                 {possible
                     ? possible.map((term) => {
                         return <li><TermCheckbox onChange={onChange} term={term} checked={(selected || []).indexOf(term.key) > -1} /></li>;
