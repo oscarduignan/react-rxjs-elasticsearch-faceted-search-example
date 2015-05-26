@@ -1,5 +1,4 @@
 import React from 'react';
-import update from 'react/lib/update';
 import * as observables from './observables';
 import { SearchForm } from './SearchForm';
 import { FilterList } from './FilterList';
@@ -15,33 +14,6 @@ export default React.createClass({
         return observables.moduleState;
     },
 
-    updateQuery(event) {
-        observables.query.onNext(event.target.value);
-    },
-
-    changePage(page) {
-        observables.resultsFrom.onNext((page-1) * observables.resultsPerPage.value);
-    },
-
-    toggleFilter(array) {
-        var current = observables[array].value; // better to get it from this.state?
-
-        return (event) => {
-            var value = event.target.value;
-
-            // rather use an immutable-js set here
-            observables[array].onNext(
-                !!event.target.checked
-                    ? current.indexOf(value) === -1
-                        ? current.concat(value)
-                        : current
-                    : current.indexOf(value) > -1
-                        ? update(current, {$splice: [[current.indexOf(value), 1]]})
-                        : current
-            );
-        };
-    },
-
     render(){
         var { query, totalPages, currentPage, selectedTags, possibleTags, selectedTypes, possibleTypes, results, searchInProgress } = this.state || {};
 
@@ -50,7 +22,7 @@ export default React.createClass({
                 <div className="row">
                     <div className="col-sm-9 col-sm-push-3">
                         <h1>Elastic React RxJS Faceted Search</h1>
-                        <SearchForm query={query} onChange={this.updateQuery} />
+                        <SearchForm query={query} onChange={(event) => observables.query.onNext(event.target.value)} />
                     </div>
                 </div>
                 <div className="row">
@@ -58,11 +30,11 @@ export default React.createClass({
                         ? ( <div className="well col-sm-3">
                                 <fieldset>
                                     <legend>Tags</legend>
-                                    <FilterList selected={selectedTags} possible={possibleTags} onChange={this.toggleFilter("selectedTags")} />
+                                    <FilterList selected={selectedTags} possible={possibleTags} onChange={(event) => observables.toggleFilter("selectedTags", event.target.value)} />
                                 </fieldset>
                                 <fieldset>
                                     <legend>Types</legend>
-                                    <FilterList selected={selectedTypes} possible={possibleTypes} onChange={this.toggleFilter("selectedTypes")} />
+                                    <FilterList selected={selectedTypes} possible={possibleTypes} onChange={(event) => observables.toggleFilter("selectedTypes", event.target.value)} />
                                 </fieldset>
                             </div>
                         ) : false}
@@ -74,7 +46,7 @@ export default React.createClass({
                                     <SearchResults results={results} />
 
                                     {results
-                                        ? <Pagination totalPages={totalPages} currentPage={currentPage} changePage={this.changePage} />
+                                        ? <Pagination totalPages={totalPages} currentPage={currentPage} changePage={observables.changePage} />
                                         : false}
                                 </div>
                             )}

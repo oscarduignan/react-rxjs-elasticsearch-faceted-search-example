@@ -1,6 +1,21 @@
 import Rx from "rx";
 import { search } from "./api";
 import * as utils from "../utils";
+import update from 'react/lib/update';
+
+export var changePage = function(page) {
+    observables.resultsFrom.onNext((page-1) * observables.resultsPerPage.value);
+};
+
+export var toggleFilter = function(filter, term) {
+    var currentState = observables[filter].value;
+
+    observables[filter].onNext(
+        currentState.indexOf(term) === -1
+            ? currentState.concat(term)
+            : update(currentState, {$splice: [[currentState.indexOf(term), 1]]})
+    );
+};
 
 // TODO pull initial value from url and persist to url on change
 export var query = new Rx.BehaviorSubject("");
