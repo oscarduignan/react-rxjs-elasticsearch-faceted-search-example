@@ -5,17 +5,9 @@ import { FilterList } from './FilterList';
 import { SearchResults } from './SearchResults';
 import { Pagination } from './Pagination';
 
-var StateStreamMixin = require('rx-react').StateStreamMixin;
-
 export default React.createClass({
-    mixins: [StateStreamMixin],
-
-    getStateStream() {
-        return observables.moduleState;
-    },
-
     render(){
-        var { query, totalPages, currentPage, selectedTags, possibleTags, selectedTypes, possibleTypes, results, searchInProgress } = this.state || {};
+        var { query, totalPages, currentPage, selectedTags, possibleTags, selectedTypes, possibleTypes, results, searchInProgress } = this.props;
 
         return (
             <div>

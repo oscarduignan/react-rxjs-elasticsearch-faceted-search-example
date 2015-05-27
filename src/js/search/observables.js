@@ -2,6 +2,7 @@ import Rx from "rx";
 import { search } from "./api";
 import * as utils from "../utils";
 import update from 'react/lib/update';
+import pluck from 'lodash/collection/pluck';
 
 export var query = new Rx.BehaviorSubject("");
 export var resultsFrom = new Rx.BehaviorSubject(0);
@@ -112,3 +113,25 @@ export var toggleFilter = function(filter, term) {
             : update(currentState, {$splice: [[currentState.indexOf(term), 1]]})
     );
 };
+
+// untoggle selected types that are no longer possible to select to prevent 0 results situations
+// this is possible because types are "OR"ed together where as tags are "AND"ed - so if you select
+// all types then select some tags, some types will no longer be possible, and without the below
+// if you unselect the possible types then with the current UI you're left with types and tags
+// selected that leave no results and there is no way to uncheck your selections because possible
+// types and tags are blank. To allow for 0 results, then we would have to make it so that your
+// selections were always visible so you could unselect them but I prefer this functionality.
+utils.
+    combineLatestAsObject({
+        selected: selectedTypes,
+        possible: possibleTypes.map(possible => pluck(possible, "key")),
+    }).
+    distinctUntilChanged().
+    subscribe(types => {
+        return types.selected.
+            filter(type => types.possible.indexOf(type) === -1).
+            map(type => {
+                return selectedTypes.
+                    onNext(update(types.selected, {$splice: [[types.selected.indexOf(type), 1]]}))
+            });
+    });

@@ -1,42 +1,33 @@
 import Rx from 'rx';
 import React from 'react';
 import SearchModule from './search/module';
-import * as observables from './search/observables';
+import * as observables from 'expose?observables!./search/observables';
 import * as utils from './utils';
 import URI from 'URIjs';
 
-// debugging
-// require('expose?observables!./search/observables');
+// so to use this module inside another react component rather than rendering it like this
+// you would just have to import the state. Either passing it down from whatever your top
+// level component is, or just subscribing to the state stream on componentDidMount and
+// calling setState when it changes. Shortcut for this is rx-react's getStateStream mixin.
 
-/*
+observables.moduleState.subscribe(state => {
+    React.render(<SearchModule {...state} />, document.getElementById('app'));
+});
 
-    Example of how you could avoid react state alltogether and just pass stuff
-    down through props!
+// below is the code that makes the searches bookmarkable, kept it separate from the module
+// because I felt like this was an external thing.
 
-        import { moduleState } from './search/observables';
-
-        moduleState.subscribe(state => {
-            React.render(<SearchModule {...state} />, document.getElementById('app'));
-        });
-
-*/
-
-var addNextSearchToHistory = new Rx.BehaviorSubject(true);
-
-function loadStateFromURL() {
-    addNextSearchToHistory.onNext(false);
+var loadStateFromURL = function() {
     var queryParams = URI().search(true);
-    if (queryParams.q)     { observables.query.onNext(queryParams.q); }
-    if (queryParams.page)  { observables.changePage(queryParams.page); }
-    if (queryParams.tags)  { observables.selectedTags.onNext(queryParams.tags); }
-    if (queryParams.types) { observables.selectedTypes.onNext(queryParams.types); }
-}
+    if(queryParams.query) observables.query.onNext(queryParams.q);
+    if(queryParams.tags)  observables.selectedTags.onNext([].concat(queryParams.tags));
+    if(queryParams.types) observables.selectedTypes.onNext([].concat(queryParams.types));
+    if(queryParams.page)  observables.changePage(queryParams.page);
+};
 
 loadStateFromURL();
 
 window.addEventListener("popstate", loadStateFromURL);
-
-React.render(<SearchModule />, document.getElementById('app'));
 
 utils.
     combineLatestAsObject({
@@ -49,9 +40,5 @@ utils.
     map(params => URI().setSearch(params).toString()).
     distinctUntilChanged().
     debounce(200).
-    subscribe(nextURL => {
-        // TODO what's the most idiomatic way to do this?
-        if (addNextSearchToHistory.value)
-            window.history.pushState(null, null, nextURL)
-        addNextSearchToHistory.onNext(true);
-    });
+    filter(nextURL => nextURL !== window.location.toString()).
+    subscribe(nextURL => window.history[URI().search() ? 'pushState' : 'replaceState'](null, null, nextURL));
