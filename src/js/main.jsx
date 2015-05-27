@@ -19,10 +19,10 @@ observables.moduleState.subscribe(state => {
 
 var loadStateFromURL = function() {
     var queryParams = URI().search(true);
-    if(queryParams.query) observables.query.onNext(queryParams.q);
-    if(queryParams.tags)  observables.selectedTags.onNext([].concat(queryParams.tags));
-    if(queryParams.types) observables.selectedTypes.onNext([].concat(queryParams.types));
-    if(queryParams.page)  observables.changePage(queryParams.page);
+    observables.query.onNext(queryParams.q || "");
+    observables.selectedTags.onNext([].concat(queryParams.tags || []));
+    observables.selectedTypes.onNext([].concat(queryParams.types || []));
+    observables.changePage(queryParams.page || 1);
 };
 
 loadStateFromURL();
