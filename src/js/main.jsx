@@ -10,6 +10,9 @@ import URI from 'URIjs';
 // level component is, or just subscribing to the state stream on componentDidMount and
 // calling setState when it changes. Shortcut for this is rx-react's getStateStream mixin.
 
+// TODO this way all state has to load before anything can display, might not be what we want
+// so might be good idea to have module state be a struct that I can stick anything I want in
+// that way stuff can load partially? {} onNext({x:y}) onNext({y:z}) {x:y, y:z}
 observables.moduleState.subscribe(state => {
     React.render(<SearchModule {...state} />, document.getElementById('app'));
 });
