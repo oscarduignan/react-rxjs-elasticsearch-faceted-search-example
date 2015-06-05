@@ -29,6 +29,7 @@ TODO move these here
             return types.length ? {terms: {typeAndSubType: types}} : [];
         });
 
+
     var filters = Rx.Observable.
         combineLatest(
             typesTermsFilter,
@@ -49,6 +50,7 @@ var client = new elasticsearch.Client({
 // bundled it for bootstrap
 
 export var search = function(options) {
+
     var query = {
         query_string: {
             query: options.query || '*',
@@ -56,12 +58,20 @@ export var search = function(options) {
         }
     };
 
-    var filter = {};
-    if (options.filters.length) {
-        filter.and = options.filters;
-    }
+    var tagsFilters = options.tags.
+        map(tag => {
+            return {term: {tags: tag}}
+        });
 
-    var tagFilters = options.filters.filter(filter => (filter.term || filter.terms || {}).tags);
+    var typesFilter = options.types.length ? {terms: {typeAndSubType: options.types}} : [];
+
+    var filter = {};
+
+    var combinedFilters = tagsFilters.concat(typesFilter);
+
+    if (combinedFilters.length) {
+        filter.and = combinedFilters;
+    }
 
     return client.search({
         index: 'elastic',
@@ -89,7 +99,7 @@ export var search = function(options) {
                             filter: {
                                 and: [
                                     { query: query }
-                                ].concat(tagFilters)
+                                ].concat(tagsFilters)
                             },
                             aggs: {
                                 typeAndSubType: {

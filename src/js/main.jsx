@@ -1,48 +1,36 @@
-import Rx from 'rx';
 import React from 'react';
 import SearchModule from 'search/SearchModule';
-import actions from 'search/actions';
-import * as observables from 'expose?observables!search/observables';
 import utils from 'utils';
 import URI from 'URIjs';
 
-// so to use this module inside another react component rather than rendering it like this
-// you would just have to import the state. Either passing it down from whatever your top
-// level component is, or just subscribing to the state stream on componentDidMount and
-// calling setState when it changes. Shortcut for this is rx-react's getStateStream mixin.
+// get initial state from URL and load observables from it
+var queryParams = URI().search(true);
 
-// TODO this way all state has to load before anything can display, might not be what we want
-// so might be good idea to have module state be a struct that I can stick anything I want in
-// that way stuff can load partially? {} onNext({x:y}) onNext({y:z}) {x:y, y:z}
-observables.state.subscribe(state => {
-    React.render(<SearchModule {...state} {...actions} />, document.getElementById('app'));
+var { observables, actions: { changeQuery, changePage } } = require('search/observables.factory')({
+    query: queryParams.q || "",
+    page: queryParams.page || 1,
+    selectedTags: queryParams.tags || [],
+    selectedTypes: queryParams.types || [],
 });
 
-// TODO another question, so with this system, how do I configure it, would my config be an observable
-// that I would config here? For example I have my api.js thing, what if I want to display multiple
-// search modules for different hosts? How would this work in my current setup - possible or not?
-// ===> to do this I would need to make observables a factory rather than global module -> so you would
-// do observables = new require("search/observables");
+// watch for changes to props and rerender, and override the changePage action to include a confirmation dialog as an example
+observables.props.subscribe(props => {
+    // example of how to override an action:
+    // React.render(<SearchModule {...props} changePage={(page) => confirm("Are you sure?") && changePage(page) } />, document.getElementById("app"));
 
+    React.render(<SearchModule {...props} />, document.getElementById("app"));
+});
 
-// the fact I've split actions and observables up might cause a problem - are my observables global? or
-// when I require() them do they duplicate themselves?
-
-// below is the code that makes the searches bookmarkable, kept it separate from the module
-// because I felt like this was an external thing.
-
-var loadStateFromURL = function() {
+// when someone clicks the back button we need to reload our state from URL, guess this should be done in the rx way!
+window.addEventListener("popstate", () => {
     var queryParams = URI().search(true);
-    actions.changeQuery(queryParams.q || "");
+    changeQuery(queryParams.q || "");
     observables.selectedTags.onNext([].concat(queryParams.tags || []));
     observables.selectedTypes.onNext([].concat(queryParams.types || []));
-    actions.changePage(queryParams.page || 1);
-};
+    changePage(queryParams.page || 1);
+});
 
-loadStateFromURL();
-
-window.addEventListener("popstate", loadStateFromURL);
-
+// when the state changes update the URL (unless the URL is the same, which means someone clicked the back button)
 utils.
     combineLatestAsObject({
         q: observables.query,

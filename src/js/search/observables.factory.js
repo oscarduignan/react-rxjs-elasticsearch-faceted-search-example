@@ -1,12 +1,11 @@
 import Rx from "rx";
 import { search } from "./api";
-import actions from './actions';
 import utils from "utils";
 import update from 'react/lib/update';
 import pluck from 'lodash/collection/pluck';
-import merge from 'lodash/collection/merge';
+import merge from 'lodash/object/merge';
 
-export default var ObservablesFactory = function({
+var ObservablesFactory = function({
     query="",
     currentPage=1,
     resultsPerPage=5,
@@ -79,10 +78,10 @@ export default var ObservablesFactory = function({
         distinctUntilChanged().
         share();
 
-    var actions = actions(observables);
+    var actions = require("./actions")(observables);
 
     observables.props = observables.state.
-        map(state => merge({}, state, this.actions));
+        map(state => merge({}, state, actions));
 
     var subscriptions = [
 
@@ -118,9 +117,9 @@ export default var ObservablesFactory = function({
                 types.selected.
                     filter(type => types.possible.indexOf(type) === -1).
                     map(type => {
-                        observables.selectedTypes.onNext(update(types.selected, {$splice: [[types.selected.indexOf(type), 1]]}))
+                        observables.selectedTypes.onNext(update(types.selected, {$splice: [[types.selected.indexOf(type), 1]]}));
                     });
-            });     
+            })
 
     ];
 
@@ -132,3 +131,5 @@ export default var ObservablesFactory = function({
         }
     };
 };
+
+export default ObservablesFactory;

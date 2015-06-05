@@ -45,7 +45,7 @@ export default React.createClass({
                             </div>
                         ) : false}
                     <div className="col-sm-9 pull-right">
-                        {searchInProgress
+                        {searchInProgress && !results
                             ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p>
                             : (
                                 <div>
