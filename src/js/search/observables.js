@@ -1,6 +1,7 @@
 import Rx from "rx";
 import { search } from "./api";
-import * as utils from "../utils";
+import actions from './actions';
+import utils from "utils";
 import update from 'react/lib/update';
 import pluck from 'lodash/collection/pluck';
 
@@ -83,7 +84,7 @@ export var searchInProgress = new Rx.BehaviorSubject(false);
 query.map(() => true).subscribe(searchInProgress);
 results.map(() => false).subscribe(searchInProgress);
 
-export var moduleState = utils.
+export var state = utils.
     combineLatestAsObject({
         query: query,
         results: results,
@@ -99,20 +100,6 @@ export var moduleState = utils.
         searchInProgress: searchInProgress,
     }).
     distinctUntilChanged();
-
-export var changePage = function(page) {
-    resultsFrom.onNext((page-1) * resultsPerPage.value);
-};
-
-export var toggleFilter = function(filter, term) {
-    var currentState = this[filter].value;
-
-    this[filter].onNext(
-        currentState.indexOf(term) === -1
-            ? currentState.concat(term)
-            : update(currentState, {$splice: [[currentState.indexOf(term), 1]]})
-    );
-};
 
 // untoggle selected types that are no longer possible to select to prevent 0 results situations
 // this is possible because types are "OR"ed together where as tags are "AND"ed - so if you select

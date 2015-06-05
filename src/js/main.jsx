@@ -1,8 +1,9 @@
 import Rx from 'rx';
 import React from 'react';
-import SearchModule from './search/module';
-import * as observables from 'expose?observables!./search/observables';
-import * as utils from './utils';
+import SearchModule from 'search/SearchModule';
+import actions from 'search/actions';
+import * as observables from 'expose?observables!search/observables';
+import utils from 'utils';
 import URI from 'URIjs';
 
 // so to use this module inside another react component rather than rendering it like this
@@ -13,19 +14,29 @@ import URI from 'URIjs';
 // TODO this way all state has to load before anything can display, might not be what we want
 // so might be good idea to have module state be a struct that I can stick anything I want in
 // that way stuff can load partially? {} onNext({x:y}) onNext({y:z}) {x:y, y:z}
-observables.moduleState.subscribe(state => {
-    React.render(<SearchModule {...state} />, document.getElementById('app'));
+observables.state.subscribe(state => {
+    React.render(<SearchModule {...state} {...actions} />, document.getElementById('app'));
 });
+
+// TODO another question, so with this system, how do I configure it, would my config be an observable
+// that I would config here? For example I have my api.js thing, what if I want to display multiple
+// search modules for different hosts? How would this work in my current setup - possible or not?
+// ===> to do this I would need to make observables a factory rather than global module -> so you would
+// do observables = new require("search/observables");
+
+
+// the fact I've split actions and observables up might cause a problem - are my observables global? or
+// when I require() them do they duplicate themselves?
 
 // below is the code that makes the searches bookmarkable, kept it separate from the module
 // because I felt like this was an external thing.
 
 var loadStateFromURL = function() {
     var queryParams = URI().search(true);
-    observables.query.onNext(queryParams.q || "");
+    actions.changeQuery(queryParams.q || "");
     observables.selectedTags.onNext([].concat(queryParams.tags || []));
     observables.selectedTypes.onNext([].concat(queryParams.types || []));
-    observables.changePage(queryParams.page || 1);
+    actions.changePage(queryParams.page || 1);
 };
 
 loadStateFromURL();

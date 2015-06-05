@@ -1,6 +1,6 @@
 import React from 'react';
 
-export var FilterList = React.createClass({
+export default React.createClass({
     render() {
         var { selected, possible, onChange } = this.props;
 

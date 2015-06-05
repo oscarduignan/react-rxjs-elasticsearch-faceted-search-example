@@ -6,15 +6,19 @@ var browserSync = require('browser-sync').create();
 var webpack = require('webpack');
 var webpackConfig = require('./webpack.config.js');
 var webpackDevServer = require('webpack-dev-server');
-var jadeLimitToAffected = require('gulp-jade-find-affected');
 
 gulp.task('jade', function() {
-    gulp.
-        src('src/jade/*.jade').
-        pipe(watch('src/jade/**/*.jade')).
-        pipe(jadeLimitToAffected()).
-        pipe(jade()).
-        pipe(gulp.dest('dist'))
+    watch('src/jade/**/*.jade', function (file) {
+        // brute force - rebuild all on change - because I just needed
+        // this to work quickly and I couldn't find a incremental solution 
+        // that worked for me that took into account jade deps.
+
+        gutil.log(gutil.colors.magenta("JADE:"), file.path);
+
+        gulp.src('src/jade/*.jade').
+            pipe(jade()).
+            pipe(gulp.dest('dist'));
+    });
 });
 
 gulp.task('browser-sync', function() {

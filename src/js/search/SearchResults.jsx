@@ -1,6 +1,6 @@
 import React from 'react';
 
-export var SearchResults = React.createClass({
+export default React.createClass({
     render() {
         var { results, ...props } = this.props;
 
