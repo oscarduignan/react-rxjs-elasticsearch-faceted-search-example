@@ -5,3 +5,9 @@ I've been experimenting with Elasticsearch for a while and also with React, I wa
 Summary of this is I'm pretty happy with RxJS and React as a combo and I wouldn't want to go back towards Flux or related variations because those feel a bit to complicated to me and it feels like with RxJS there is plenty of room to grow/mature my approach.
 
 The thing that's lacking at the moment that most people at SocratesUK will probably notice are automated tests, I'm not sure what tooling there is available for writing tests against RxJS but it's something for me to look at now.
+
+---
+
+Ah and to build this the missing bit that will stop you running it is an instance of elasticsearch accessible at localhost:9200 and a collection with the meta data utilized in [src/js/search/api.js]!
+
+Build tool for this is webpack + gulp, you should be able to get it working - served up in your browser with react hot reloading by running `gulp`.
