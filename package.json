@@ -37,5 +37,8 @@
     "webpack": "^1.8.11",
     "webpack-dev-server": "^1.8.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "test": "cd test/js && ../../node_modules/.bin/webpack --watch & node_modules/.bin/browser-sync start --server test/js --files test/js/specs.js"
+  }
 }

@@ -20,7 +20,7 @@ export default React.createClass({
 
                 {Array.from(Array(totalPages).keys()).map(page => { page++
                     return (
-                        <li className={cx({active: page === currentPage})}>
+                        <li className={cx({pagination__page: true, active: page === currentPage})}>
                             <a href="#" onClick={this.changePage(page)}>{page}</a>
                         </li>
                     );
