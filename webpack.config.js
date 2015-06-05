@@ -1,7 +1,5 @@
- 
 var path    = require('path');
 var webpack = require('webpack');
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
   devtool: 'eval',
@@ -19,7 +17,7 @@ module.exports = {
     loaders: [
       { test: /\.js$/,     loader: "babel?optional[]=runtime&stage=1", exclude: /node_modules|bower_components/},
       { test: /\.jsx$/,    loader: "react-hot!babel?optional[]=runtime&stage=1", exclude: /node_modules|bower_components/},
-      { test: /\.s?css$/,  loader: ExtractTextPlugin.extract("style", "css!autoprefixer?browsers=last 2 version!sass?includePaths[]=" + path.join(__dirname, "node_modules"))},
+      { test: /\.s?css$/,  loader: "style!css!autoprefixer?browsers=last 2 version!sass?includePaths[]=" + path.join(__dirname, "node_modules")},
       { test: /\.woff2?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
       { test: /\.ttf$/,    loader: "file-loader" },
       { test: /\.eot$/,    loader: "file-loader" },
@@ -33,11 +31,7 @@ module.exports = {
     publicPath: "http://localhost:8080/"
   },
   plugins: [
-    new ExtractTextPlugin("[name].css"),
     new webpack.HotModuleReplacementPlugin(),
-    //new webpack.optimize.UglifyJsPlugin(),
-    //new webpack.optimize.OccurenceOrderPlugin(),
-    //new webpack.optimize.DedupePlugin(),
     new webpack.NoErrorsPlugin(),
     new webpack.ProvidePlugin({
       $: "jquery",

@@ -23,7 +23,7 @@ gulp.task('jade', function() {
 
 gulp.task('browser-sync', function() {
     browserSync.init({
-        open: false,
+        open: true,
         files: [
             'dist/*.html'
         ],
