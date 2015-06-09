@@ -2,7 +2,7 @@ import elasticsearch from 'elasticsearch';
 
 // TODO is this better? So in observables I just do api = require(api)({host: "localhost:9200"}) // config
 // feel like at this point it's better to not use closures state and just pass the host, type, index to the
-// search function! Then these can be defined in observables, defined as observables, or whatever. And it 
+// search function! Then these can be defined in observables, defined as observables, or whatever. And it
 // would make this easier to test I think not having that static state.
 /*
 export default function(host) {
@@ -45,8 +45,8 @@ var client = new elasticsearch.Client({
     host: 'localhost:9200'
 });
 
-// TODO replace elasticsearch client with something else, it's like 400kb 
-// minified and I'm not really using it, could just use jquery since I've 
+// TODO replace elasticsearch client with something else, it's like 400kb
+// minified and I'm not really using it, could just use jquery since I've
 // bundled it for bootstrap
 
 export var search = function(options) {
@@ -54,13 +54,13 @@ export var search = function(options) {
     var query = {
         query_string: {
             query: options.query || '*',
-            fields: ['title', 'summary', 'body', 'tags'],
+            fields: ['title', 'summary', 'body', 'tags']
         }
     };
 
     var tagsFilters = options.tags.
         map(tag => {
-            return {term: {tags: tag}}
+            return {term: {tags: tag}};
         });
 
     var typesFilter = options.types.length ? {terms: {typeAndSubType: options.types}} : [];

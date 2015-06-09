@@ -9,7 +9,7 @@ export default function(observables) {
         },
 
         changePage(page) {
-            return observables.resultsFrom.onNext((page-1) * observables.resultsPerPage.value);
+            return observables.resultsFrom.onNext((page - 1) * observables.resultsPerPage.value);
         },
 
         toggleFilter(filter, term) {
@@ -21,5 +21,5 @@ export default function(observables) {
                     : update(currentState, {$splice: [[currentState.indexOf(term), 1]]})
             );
         }
-    }
+    };
 }

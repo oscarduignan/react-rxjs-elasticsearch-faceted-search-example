@@ -1,12 +1,12 @@
-import Rx from "rx";
-import { search } from "./api";
-import utils from "utils";
+import Rx from 'rx';
+import { search } from './api';
+import utils from 'utils';
 import update from 'react/lib/update';
 import pluck from 'lodash/collection/pluck';
 import merge from 'lodash/object/merge';
 
 var ObservablesFactory = function({
-    query="",
+    query='',
     currentPage=1,
     resultsPerPage=5,
     selectedTags=[],
@@ -14,11 +14,11 @@ var ObservablesFactory = function({
 }) {
     var observables = {
         query: new Rx.BehaviorSubject(query),
-        resultsFrom: new Rx.BehaviorSubject(resultsPerPage * (currentPage-1)),
+        resultsFrom: new Rx.BehaviorSubject(resultsPerPage * (currentPage - 1)),
         resultsPerPage: new Rx.BehaviorSubject(resultsPerPage),
         selectedTags: new Rx.BehaviorSubject(selectedTags),
         selectedTypes: new Rx.BehaviorSubject(selectedTypes),
-        searchInProgress: new Rx.BehaviorSubject(false),
+        searchInProgress: new Rx.BehaviorSubject(false)
     };
 
     observables.searches = utils.
@@ -38,27 +38,48 @@ var ObservablesFactory = function({
         share();
 
     observables.possibleTags = observables.results.
-        pluck('aggregations', 'tags', 'buckets');
+        pluck('aggregations', 'tags', 'buckets').
+        map(terms => {
+            return terms.map(term => {
+                return {
+                    term: term.key,
+                    count: term.doc_count
+                };
+            });
+        }).
+        share();
 
     observables.possibleTypes = observables.results.
-        pluck('aggregations', 'all', 'query', 'typeAndSubType', 'buckets');
+        pluck('aggregations', 'all', 'query', 'typeAndSubType', 'buckets').
+        map(terms => {
+            return terms.map(term => {
+                return {
+                    term: term.key,
+                    count: term.doc_count
+                };
+            });
+        }).
+        share();
 
     observables.totalResults = observables.results.
-        pluck('hits', 'total');
+        pluck('hits', 'total').
+        share();
 
     observables.totalPages = Rx.Observable.
         combineLatest(
             observables.totalResults,
             observables.resultsPerPage,
-            (totalResults, resultsPerPage) => Math.ceil(totalResults / resultsPerPage)
-        );
+            (total, perPage) => Math.ceil(total / perPage)
+        ).
+        share();
 
     observables.currentPage = Rx.Observable.
         combineLatest(
             observables.resultsFrom,
             observables.resultsPerPage,
-            (resultsFrom, resultsPerPage) => Math.ceil((resultsFrom+1) / resultsPerPage)
-        );
+            (from, perPage) => Math.ceil((from + 1) / perPage)
+        ).
+        share();
 
     observables.state = utils.
         combineLatestAsObject({
@@ -73,15 +94,16 @@ var ObservablesFactory = function({
             possibleTags: observables.possibleTags,
             selectedTypes: observables.selectedTypes,
             possibleTypes: observables.possibleTypes,
-            searchInProgress: observables.searchInProgress,
+            searchInProgress: observables.searchInProgress
         }).
         distinctUntilChanged().
         share();
 
-    var actions = require("./actions")(observables);
+    var actions = require('./actions')(observables);
 
     observables.props = observables.state.
-        map(state => merge({}, state, actions));
+        map(state => merge({}, state, actions)).
+        share();
 
     var subscriptions = [
 
@@ -110,7 +132,7 @@ var ObservablesFactory = function({
         utils.
             combineLatestAsObject({
                 selected: observables.selectedTypes,
-                possible: observables.possibleTypes.map(possible => pluck(possible, "key")),
+                possible: observables.possibleTypes.map(possible => pluck(possible, 'term'))
             }).
             distinctUntilChanged().
             subscribe(types => {

@@ -5,6 +5,27 @@ import SearchResults from './SearchResults';
 import Pagination from './Pagination';
 
 export default React.createClass({
+    propTypes: {
+        query: React.PropTypes.string,
+        totalPages: React.PropTypes.number,
+        currentPage: React.PropTypes.number,
+        selectedTags: React.PropTypes.array,
+        possibleTags: React.PropTypes.arrayOf(React.PropTypes.shape({
+            term: React.PropTypes.string,
+            count: React.PropTypes.number
+        })),
+        selectedTypes: React.PropTypes.array,
+        possibleTypes: React.PropTypes.arrayOf(React.PropTypes.shape({
+            term: React.PropTypes.string,
+            count: React.PropTypes.number
+        })),
+        results: React.PropTypes.object,
+        searchInProgress: React.PropTypes.bool,
+        changeQuery: React.PropTypes.func,
+        changePage: React.PropTypes.func,
+        toggleFilter: React.PropTypes.func
+    },
+
     render(){
         var {
             // state
@@ -23,6 +44,8 @@ export default React.createClass({
             toggleFilter,
         } = this.props;
 
+        console.log("rendered");
+
         return (
             <div>
                 <div className="row">
@@ -36,17 +59,17 @@ export default React.createClass({
                         ? ( <div className="well col-sm-3">
                                 <fieldset>
                                     <legend>Tags</legend>
-                                    <FilterList selected={selectedTags} possible={possibleTags} onChange={(event) => toggleFilter("selectedTags", event.target.value)} />
+                                    <FilterList selected={selectedTags} possible={possibleTags} onChange={(event) => toggleFilter('selectedTags', event.target.value)} />
                                 </fieldset>
                                 <fieldset>
                                     <legend>Types</legend>
-                                    <FilterList selected={selectedTypes} possible={possibleTypes} onChange={(event) => toggleFilter("selectedTypes", event.target.value)} />
+                                    <FilterList selected={selectedTypes} possible={possibleTypes} onChange={(event) => toggleFilter('selectedTypes', event.target.value)} />
                                 </fieldset>
                             </div>
                         ) : false}
                     <div className="col-sm-9 pull-right">
                         {searchInProgress && !results
-                            ? <p style={{color:'#999'}}><strong>Loading, please wait...</strong></p>
+                            ? <p style={{color: '#999'}}><strong>Loading, please wait...</strong></p>
                             : (
                                 <div>
                                     <SearchResults results={results} />

@@ -1,6 +1,10 @@
 import React from 'react';
 
 export default React.createClass({
+    propTypes: {
+        results: React.PropTypes.any
+    },
+
     render() {
         var { results, ...props } = this.props;
 
@@ -19,6 +23,16 @@ export default React.createClass({
 });
 
 var SearchResult = React.createClass({
+    propTypes: {
+        hit: React.PropTypes.shape({
+            _score: React.PropTypes.number,
+            _source: React.PropTypes.shape({
+                url: React.PropTypes.string,
+                title: React.PropTypes.string
+            })
+        })
+    },
+
     render() {
         var { title, url } = this.props.hit._source;
 
