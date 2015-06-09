@@ -49,21 +49,21 @@ var client = new elasticsearch.Client({
 // minified and I'm not really using it, could just use jquery since I've
 // bundled it for bootstrap
 
-export var search = function(options) {
+export var search = function({query='*', selectedTags=[], selectedTypes=[], resultsFrom=0, resultsPerPage=5}) {
 
-    var query = {
+    query = {
         query_string: {
-            query: options.query || '*',
+            query: query || '*',
             fields: ['title', 'summary', 'body', 'tags']
         }
     };
 
-    var tagsFilters = options.tags.
+    var tagsFilters = selectedTags.
         map(tag => {
             return {term: {tags: tag}};
         });
 
-    var typesFilter = options.types.length ? {terms: {typeAndSubType: options.types}} : [];
+    var typesFilter = selectedTypes.length ? {terms: {typeAndSubType: selectedTypes}} : [];
 
     var filter = {};
 
@@ -76,8 +76,8 @@ export var search = function(options) {
     return client.search({
         index: 'elastic',
         type: 'muraContent',
-        from: options.from || 0,
-        size: options.size || 5,
+        from: resultsFrom,
+        size: resultsPerPage,
         body: {
             query: {
                 filtered: {

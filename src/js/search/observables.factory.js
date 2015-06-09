@@ -7,149 +7,165 @@ import merge from 'lodash/object/merge';
 
 var ObservablesFactory = function({
     query='',
-    currentPage=1,
-    resultsPerPage=5,
     selectedTags=[],
     selectedTypes=[],
+    resultsPerPage=5,
+    page=1,
 }) {
-    var observables = {
+    var subjects = {
         query: new Rx.BehaviorSubject(query),
-        resultsFrom: new Rx.BehaviorSubject(resultsPerPage * (currentPage - 1)),
-        resultsPerPage: new Rx.BehaviorSubject(resultsPerPage),
         selectedTags: new Rx.BehaviorSubject(selectedTags),
         selectedTypes: new Rx.BehaviorSubject(selectedTypes),
+        resultsPerPage: new Rx.BehaviorSubject(resultsPerPage),
+        resultsFrom: new Rx.BehaviorSubject(resultsPerPage * (page - 1)),
         searchInProgress: new Rx.BehaviorSubject(false)
     };
 
-    observables.searches = utils.
-        combineLatestAsObject({
-            query: observables.query,
-            from: observables.resultsFrom,
-            size: observables.resultsPerPage,
-            tags: observables.selectedTags,
-            types: observables.selectedTypes
-        }).
-        distinctUntilChanged().
-        debounce(200).
-        share();
+    var actions = {
+        changeQuery(nextQuery) {
+            return subjects.query.onNext(nextQuery);
+        },
 
-    observables.results = observables.searches.
+        changePage(nextPage) {
+            return subjects.resultsFrom.onNext((nextPage - 1) * subjects.resultsPerPage.value);
+        },
+
+        toggleFilter(filter, term) {
+            var currentState = subjects[filter].value;
+
+            return subjects[filter].onNext(
+                currentState.indexOf(term) === -1
+                    ? currentState.concat(term)
+                    : update(currentState, {$splice: [[currentState.indexOf(term), 1]]})
+            );
+        }
+    };
+
+    var searches = utils.
+        combineLatestAsObject(subjects).
+        distinctUntilChanged();
+
+    var results = searches.
+        debounce(200).
         flatMapLatest(options => search(options)).
         share();
 
-    observables.possibleTags = observables.results.
+    var possibleTags = results.
         pluck('aggregations', 'tags', 'buckets').
-        map(terms => {
-            return terms.map(term => {
-                return {
-                    term: term.key,
-                    count: term.doc_count
-                };
-            });
-        }).
-        share();
-
-    observables.possibleTypes = observables.results.
-        pluck('aggregations', 'all', 'query', 'typeAndSubType', 'buckets').
-        map(terms => {
-            return terms.map(term => {
-                return {
-                    term: term.key,
-                    count: term.doc_count
-                };
-            });
-        }).
-        share();
-
-    observables.totalResults = observables.results.
-        pluck('hits', 'total').
-        share();
-
-    observables.totalPages = Rx.Observable.
-        combineLatest(
-            observables.totalResults,
-            observables.resultsPerPage,
-            (total, perPage) => Math.ceil(total / perPage)
-        ).
-        share();
-
-    observables.currentPage = Rx.Observable.
-        combineLatest(
-            observables.resultsFrom,
-            observables.resultsPerPage,
-            (from, perPage) => Math.ceil((from + 1) / perPage)
-        ).
-        share();
-
-    observables.state = utils.
-        combineLatestAsObject({
-            query: observables.query,
-            results: observables.results,
-            resultsFrom: observables.resultsFrom,
-            resultsPerPage: observables.resultsPerPage,
-            totalResults: observables.totalResults,
-            totalPages: observables.totalPages,
-            currentPage: observables.currentPage,
-            selectedTags: observables.selectedTags,
-            possibleTags: observables.possibleTags,
-            selectedTypes: observables.selectedTypes,
-            possibleTypes: observables.possibleTypes,
-            searchInProgress: observables.searchInProgress
-        }).
         distinctUntilChanged().
+        map(terms => {
+            return terms.map(term => {
+                return {
+                    term: term.key,
+                    count: term.doc_count
+                };
+            });
+        }).
         share();
 
-    var actions = require('./actions')(observables);
+    var possibleTypes = results.
+        pluck('aggregations', 'all', 'query', 'typeAndSubType', 'buckets').
+        distinctUntilChanged().
+        map(terms => {
+            return terms.map(term => {
+                return {
+                    term: term.key,
+                    count: term.doc_count
+                };
+            });
+        });
 
-    observables.props = observables.state.
-        map(state => merge({}, state, actions)).
-        share();
+    var totalResults = results.
+        pluck('hits', 'total').
+        distinctUntilChanged();
 
-    var subscriptions = [
+    var totalPages = totalResults.
+        withLatestFrom(
+            subjects.resultsPerPage,
+            (total, perPage) => Math.ceil(total / perPage)
+        );
 
-        // reset results to start from 0 when selected tags / types or query changes
-        Rx.Observable.
-            merge(
-                observables.query,
-                observables.selectedTags,
-                observables.selectedTypes
-            ).
-            map(() => 0).
-            subscribe(observables.resultsFrom),
+    var currentPage = subjects.resultsFrom.
+        withLatestFrom(
+            subjects.resultsPerPage,
+            (from, perPage) => Math.ceil((from + 1) / perPage)
+        );
 
-        observables.query.subscribe(() => {
-            // clear the selected tags and types
-            observables.selectedTags.onNext([]);
-            observables.selectedTypes.onNext([]);
-            // set searchInProgress to true
-            observables.searchInProgress.onNext(true);
-        }),
+    var state = utils.
+        combineLatestAsObject({
+            results,
+            totalResults,
+            totalPages,
+            currentPage,
+            possibleTags,
+            possibleTypes,
+            ...subjects
+        }).
+        distinctUntilChanged();
 
-        // set searchInProgress to false when we get some results
-        observables.results.map(() => false).subscribe(observables.searchInProgress),
+    var props = state.
+        map(currentState => merge({}, currentState, actions));
 
-        // untoggle selected types when they are no longer possible selections
-        utils.
-            combineLatestAsObject({
-                selected: observables.selectedTypes,
-                possible: observables.possibleTypes.map(possible => pluck(possible, 'term'))
-            }).
-            distinctUntilChanged().
-            subscribe(types => {
-                types.selected.
-                    filter(type => types.possible.indexOf(type) === -1).
-                    map(type => {
-                        observables.selectedTypes.onNext(update(types.selected, {$splice: [[types.selected.indexOf(type), 1]]}));
-                    });
-            })
+    // reset results to start from 0 when selected tags / types or query changes
+    Rx.Observable.
+        merge(
+            subjects.query,
+            subjects.selectedTags,
+            subjects.selectedTypes
+        ).
+        map(() => 0).
+        subscribe(subjects.resultsFrom);
 
-    ];
+    // clear selected tags and types. and search in progress on new search
+    subjects.query.
+        distinctUntilChanged().
+        subscribe(() => {
+            subjects.selectedTags.onNext([]);
+            subjects.selectedTypes.onNext([]);
+            subjects.searchInProgress.onNext(true);
+        });
+
+    // set searchInProgress to false when we get some results
+    results.
+        map(() => false).
+        subscribe(subjects.searchInProgress);
+
+    // untoggle selected types when they are no longer possible selections
+    possibleTypes.
+        withLatestFrom(
+            subjects.selectedTypes.distinctUntilChanged(),
+            (possible, selected) => {
+                return {possible: pluck(possible, 'term'), selected};
+            }
+        ).
+        subscribe(({possible, selected}) => {
+            selected.
+                filter(type => possible.indexOf(type) === -1).
+                map(type => {
+                    subjects.selectedTypes.onNext(
+                        update(selected, {$splice: [[selected.indexOf(type), 1]]})
+                    );
+                });
+        });
+
 
     return {
-        observables: observables,
         actions: actions,
+        observables: {
+            props,
+            state,
+            results,
+            totalResults,
+            totalPages,
+            currentPage,
+            possibleTags,
+            possibleTypes,
+            ...subjects
+        },
         dispose() {
-            observables.concat(subscriptions).map(stream => stream.dispose());
+            subjects.map(subject => subject.dispose());
+
+            // do I need to connect to and dispose of hot observables too / any other cleanup?
         }
     };
 };

@@ -44,8 +44,6 @@ export default React.createClass({
             toggleFilter,
         } = this.props;
 
-        console.log("rendered");
-
         return (
             <div>
                 <div className="row">

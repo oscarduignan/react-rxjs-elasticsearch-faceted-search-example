@@ -15,7 +15,7 @@ var { observables, actions: { changeQuery, changePage } } = require('search/obse
 
 // watch for changes to props and rerender, and override the changePage action to include a confirmation dialog as an example
 // small throttle to cut down the number of rerenders - is this helpful, harmful, or neither?
-observables.props.throttle(100).subscribe(props => {
+observables.props.subscribe(props => {
     // example of how to override an action:
     // React.render(<SearchModule {...props} changePage={(page) => confirm("Are you sure?") && changePage(page) } />, document.getElementById("app"));
 
